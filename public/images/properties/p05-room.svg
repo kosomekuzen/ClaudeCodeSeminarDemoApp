@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" role="img" aria-label="サンライズ中野 室内">
+  <defs>
+    <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="hsl(190, 35%, 90%)" />
+      <stop offset="100%" stop-color="hsl(190, 30%, 82%)" />
+    </linearGradient>
+    <linearGradient id="skyRoom" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="hsl(20, 70%, 88%)" />
+      <stop offset="100%" stop-color="hsl(40, 65%, 70%)" />
+    </linearGradient>
+  </defs>
+  <rect width="800" height="600" fill="url(#wall)" />
+  <polygon points="0,420 800,420 800,600 0,600" fill="hsl(210, 30%, 62%)" />
+  <polygon points="120,420 680,420 780,600 20,600" fill="rgba(0,0,0,0.08)" />
+  <rect x="480" y="110" width="240" height="220" rx="4" fill="url(#skyRoom)" stroke="#fff" stroke-width="10" />
+  <line x1="600" y1="110" x2="600" y2="330" stroke="#fff" stroke-width="8" />
+  <line x1="480" y1="220" x2="720" y2="220" stroke="#fff" stroke-width="8" />
+  <rect x="90" y="330" width="220" height="100" rx="16" fill="hsl(130, 55%, 55%)" />
+  <rect x="90" y="310" width="220" height="30" rx="14" fill="hsl(130, 55%, 55%)" opacity="0.85" />
+  <rect x="90" y="430" width="220" height="14" fill="rgba(0,0,0,0.15)" />
+  <rect x="360" y="360" width="90" height="70" rx="6" fill="hsl(190, 20%, 30%)" />
+  <rect x="0" y="500" width="800" height="100" fill="rgba(0,0,0,0.38)" />
+  <text x="40" y="540" font-family="'Hiragino Sans','Noto Sans JP',sans-serif" font-size="30" font-weight="700" fill="#fff">サンライズ中野</text>
+  <text x="40" y="572" font-family="'Hiragino Sans','Noto Sans JP',sans-serif" font-size="18" fill="rgba(255,255,255,0.85)">室内イメージ</text>
+</svg>
