@@ -10,6 +10,7 @@
   <div class="title-bar">
     <span class="title-bar-name">お仕事スイッチ<span class="title-bar-ver">Ver 1.0</span></span>
     <div class="title-bar-actions">
+      <button id="settings-button" class="title-bar-icon-btn" type="button" title="設定">⚙</button>
       <button id="minimize-button" class="title-bar-icon-btn" type="button" title="最小化">_</button>
       <button id="hide-button" class="title-bar-icon-btn" type="button" title="閉じる(トレイに格納されます)">✕</button>
     </div>
@@ -78,6 +79,90 @@
       <div class="view-actions">
         <button id="launch-button" type="button">開始する</button>
         <span id="launch-status" class="run-status" aria-live="polite"></span>
+      </div>
+    </section>
+
+    <!-- 設定 -->
+    <section id="view-settings" class="view" hidden>
+      <div class="view-header">
+        <h2>設定</h2>
+        <button type="button" class="ghost-button" data-action="back-to-dashboard">戻る</button>
+      </div>
+
+      <div class="settings-group">
+        <h3>見た目</h3>
+        <div class="settings-row">
+          <span class="settings-row-label">テーマ</span>
+          <select id="setting-theme" class="select-box">
+            <option value="system">システムに合わせる</option>
+            <option value="light">ライト</option>
+            <option value="dark">ダーク</option>
+          </select>
+        </div>
+        <div class="settings-row">
+          <span class="settings-row-label">アクセントカラー</span>
+          <div id="setting-accent-colors" class="color-row"></div>
+        </div>
+        <div class="settings-row">
+          <span class="settings-row-label">ウィンドウの透明度</span>
+          <div class="opacity-row">
+            <input id="setting-opacity" type="range" min="0.5" max="1" step="0.05">
+            <span id="setting-opacity-value" class="opacity-value">100%</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-group">
+        <h3>起動・常駐</h3>
+        <div class="settings-row">
+          <span class="settings-row-label">常に最前面に表示</span>
+          <input id="setting-always-on-top" type="checkbox" class="toggle-input">
+        </div>
+        <div class="settings-row">
+          <span class="settings-row-label">PC起動時に自動で立ち上げる</span>
+          <input id="setting-auto-launch" type="checkbox" class="toggle-input">
+        </div>
+        <div class="settings-row">
+          <div>
+            <div class="settings-row-label">ホットキーで呼び出す</div>
+            <div class="settings-row-desc">Ctrl(⌘) + Shift + Space</div>
+          </div>
+          <input id="setting-hotkey" type="checkbox" class="toggle-input">
+        </div>
+        <div class="settings-row">
+          <span class="settings-row-label">ウィンドウ位置を記憶する</span>
+          <input id="setting-remember-position" type="checkbox" class="toggle-input">
+        </div>
+      </div>
+
+      <div class="settings-group">
+        <h3>実行</h3>
+        <div class="settings-row">
+          <div>
+            <div class="settings-row-label">起動前の確認をスキップする</div>
+            <div class="settings-row-desc">「開始」を押すと即座に実行します</div>
+          </div>
+          <input id="setting-skip-preview" type="checkbox" class="toggle-input">
+        </div>
+        <div class="settings-row">
+          <span class="settings-row-label">実行完了時に通知を表示する</span>
+          <input id="setting-notify" type="checkbox" class="toggle-input">
+        </div>
+      </div>
+
+      <div class="settings-group settings-group-last">
+        <h3>データ</h3>
+        <div class="settings-row">
+          <div>
+            <div class="settings-row-label">業務モードのバックアップ</div>
+            <div class="settings-row-desc">他のPCへの引き継ぎにも使えます</div>
+          </div>
+          <div class="data-actions">
+            <button id="export-data-button" class="data-btn" type="button">書き出し</button>
+            <button id="import-data-button" class="data-btn" type="button">読み込み</button>
+          </div>
+        </div>
+        <p id="data-status" class="run-status" aria-live="polite"></p>
       </div>
     </section>
   </main>

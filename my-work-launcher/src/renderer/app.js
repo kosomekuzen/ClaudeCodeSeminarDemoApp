@@ -9,10 +9,12 @@ const TYPE_LABEL_JA = { url: 'URL', file: 'ファイル', folder: 'フォルダ'
 const els = {
   hideButton: document.getElementById('hide-button'),
   minimizeButton: document.getElementById('minimize-button'),
+  settingsButton: document.getElementById('settings-button'),
   views: {
     dashboard: document.getElementById('view-dashboard'),
     edit: document.getElementById('view-edit'),
     preview: document.getElementById('view-preview'),
+    settings: document.getElementById('view-settings'),
   },
   modeCards: document.getElementById('mode-cards'),
   modeEmpty: document.getElementById('mode-empty'),
@@ -25,10 +27,24 @@ const els = {
   previewRows: document.getElementById('preview-rows'),
   launchButton: document.getElementById('launch-button'),
   launchStatus: document.getElementById('launch-status'),
+  themeSelect: document.getElementById('setting-theme'),
+  accentColors: document.getElementById('setting-accent-colors'),
+  opacityInput: document.getElementById('setting-opacity'),
+  opacityValue: document.getElementById('setting-opacity-value'),
+  alwaysOnTop: document.getElementById('setting-always-on-top'),
+  autoLaunch: document.getElementById('setting-auto-launch'),
+  hotkey: document.getElementById('setting-hotkey'),
+  rememberPosition: document.getElementById('setting-remember-position'),
+  skipPreview: document.getElementById('setting-skip-preview'),
+  notify: document.getElementById('setting-notify'),
+  exportButton: document.getElementById('export-data-button'),
+  importButton: document.getElementById('import-data-button'),
+  dataStatus: document.getElementById('data-status'),
 }
 
 let editingId = null // null = 新規登録
 let previewModeId = null
+let currentSettings = null
 
 // ---- 画面切り替え ----
 
@@ -47,6 +63,7 @@ document.querySelectorAll('[data-action="back-to-dashboard"]').forEach((btn) => 
 
 els.hideButton.addEventListener('click', () => window.launcherAPI.hideWindow())
 els.minimizeButton.addEventListener('click', () => window.launcherAPI.minimizeWindow())
+els.settingsButton.addEventListener('click', () => showView('settings'))
 
 // ---- ダッシュボード ----
 
@@ -76,7 +93,12 @@ async function loadDashboard() {
     startBtn.type = 'button'
     startBtn.className = 'primary'
     startBtn.textContent = '開始'
-    startBtn.addEventListener('click', () => openPreview(mode.id, mode.name))
+    startBtn.addEventListener('click', async () => {
+      await openPreview(mode.id, mode.name)
+      if (currentSettings?.skipPreviewConfirm) {
+        launchCurrentPreview()
+      }
+    })
 
     const editBtn = document.createElement('button')
     editBtn.type = 'button'
@@ -248,7 +270,7 @@ function renderPreviewRows(rows) {
   })
 }
 
-els.launchButton.addEventListener('click', async () => {
+async function launchCurrentPreview() {
   if (!previewModeId) return
   els.launchButton.disabled = true
   els.launchStatus.textContent = '起動しています…'
@@ -262,8 +284,114 @@ els.launchButton.addEventListener('click', async () => {
   els.launchStatus.textContent = failCount > 0 ? `完了(${failCount}件失敗)` : '完了しました'
   if (failCount > 0) els.launchStatus.classList.add('is-error')
   els.launchButton.disabled = false
+}
+
+els.launchButton.addEventListener('click', launchCurrentPreview)
+
+// ---- 設定 ----
+
+function mixHex(hex, amount, towards) {
+  const num = parseInt(hex.slice(1), 16)
+  const rgb = [(num >> 16) & 0xff, (num >> 8) & 0xff, num & 0xff]
+  const mixed = rgb.map((c, i) => Math.round(c + (towards[i] - c) * amount))
+  return `#${mixed.map((c) => Math.min(255, Math.max(0, c)).toString(16).padStart(2, '0')).join('')}`
+}
+
+function applyThemeToDocument(isDark) {
+  document.body.dataset.theme = isDark ? 'dark' : 'light'
+  if (currentSettings) applyAccentToDocument(currentSettings.accentColor)
+}
+
+function applyAccentToDocument(color) {
+  const isDark = document.body.dataset.theme === 'dark'
+  const hover = isDark ? mixHex(color, 0.3, [255, 255, 255]) : mixHex(color, 0.3, [0, 0, 0])
+  document.body.style.setProperty('--accent', color)
+  document.body.style.setProperty('--accent-hover', hover)
+}
+
+function renderAccentSwatches(presets, selected) {
+  els.accentColors.innerHTML = ''
+  presets.forEach((color) => {
+    const btn = document.createElement('button')
+    btn.type = 'button'
+    btn.className = 'color-swatch' + (color === selected ? ' is-selected' : '')
+    btn.style.background = color
+    btn.title = color
+    btn.addEventListener('click', () => updateSetting({ accentColor: color }))
+    els.accentColors.appendChild(btn)
+  })
+}
+
+function populateSettingsForm(settings) {
+  els.themeSelect.value = settings.theme
+  els.opacityInput.value = settings.opacity
+  els.opacityValue.textContent = `${Math.round(settings.opacity * 100)}%`
+  els.alwaysOnTop.checked = settings.alwaysOnTop
+  els.autoLaunch.checked = settings.autoLaunch
+  els.hotkey.checked = settings.hotkeyEnabled
+  els.rememberPosition.checked = settings.rememberPosition
+  els.skipPreview.checked = settings.skipPreviewConfirm
+  els.notify.checked = settings.notifyOnComplete
+  renderAccentSwatches(settings.accentPresets || [], settings.accentColor)
+}
+
+async function loadSettings() {
+  const settings = await window.launcherAPI.getSettings()
+  currentSettings = settings
+  applyThemeToDocument(settings.isDark)
+  applyAccentToDocument(settings.accentColor)
+  populateSettingsForm(settings)
+}
+
+async function updateSetting(partial) {
+  const settings = await window.launcherAPI.updateSettings(partial)
+  currentSettings = settings
+  applyThemeToDocument(settings.isDark)
+  applyAccentToDocument(settings.accentColor)
+  populateSettingsForm(settings)
+}
+
+els.themeSelect.addEventListener('change', () => updateSetting({ theme: els.themeSelect.value }))
+
+els.opacityInput.addEventListener('input', () => {
+  els.opacityValue.textContent = `${Math.round(els.opacityInput.value * 100)}%`
 })
+els.opacityInput.addEventListener('change', () => {
+  updateSetting({ opacity: Number(els.opacityInput.value) })
+})
+
+els.alwaysOnTop.addEventListener('change', () => updateSetting({ alwaysOnTop: els.alwaysOnTop.checked }))
+els.autoLaunch.addEventListener('change', () => updateSetting({ autoLaunch: els.autoLaunch.checked }))
+els.hotkey.addEventListener('change', () => updateSetting({ hotkeyEnabled: els.hotkey.checked }))
+els.rememberPosition.addEventListener('change', () =>
+  updateSetting({ rememberPosition: els.rememberPosition.checked })
+)
+els.skipPreview.addEventListener('change', () => updateSetting({ skipPreviewConfirm: els.skipPreview.checked }))
+els.notify.addEventListener('change', () => updateSetting({ notifyOnComplete: els.notify.checked }))
+
+els.exportButton.addEventListener('click', async () => {
+  const result = await window.launcherAPI.exportData()
+  if (result.canceled) return
+  els.dataStatus.textContent = `書き出しました: ${result.filePath}`
+  els.dataStatus.classList.remove('is-error')
+})
+
+els.importButton.addEventListener('click', async () => {
+  const result = await window.launcherAPI.importData()
+  if (result.canceled) return
+  if (result.errors?.length) {
+    els.dataStatus.textContent = result.errors.join(' / ')
+    els.dataStatus.classList.add('is-error')
+    return
+  }
+  els.dataStatus.textContent = `${result.importedCount}件の業務モードを読み込みました`
+  els.dataStatus.classList.remove('is-error')
+  loadDashboard()
+})
+
+window.launcherAPI.onThemeChanged(({ isDark }) => applyThemeToDocument(isDark))
 
 // ---- 初期化 ----
 
 loadDashboard()
+loadSettings()
