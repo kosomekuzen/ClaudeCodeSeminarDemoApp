@@ -19,12 +19,14 @@ const settingsService = require('./settings-service')
 const ICON_PATH = path.join(__dirname, '..', '..', 'build', 'icon.png')
 const WINDOW_WIDTH = 420
 const WINDOW_HEIGHT = 640
+const MIN_WINDOW_WIDTH = 360
+const MIN_WINDOW_HEIGHT = 420
 const HOTKEY_ACCELERATOR = 'CommandOrControl+Shift+Space'
 
 let mainWindow = null
 let tray = null
 let isQuitting = false
-let savePositionTimer = null
+let saveWindowStateTimer = null
 
 function createWindow(settings) {
   const bounds = { width: WINDOW_WIDTH, height: WINDOW_HEIGHT }
@@ -32,10 +34,16 @@ function createWindow(settings) {
     bounds.x = settings.windowPosition.x
     bounds.y = settings.windowPosition.y
   }
+  if (settings.rememberPosition && settings.windowSize) {
+    bounds.width = settings.windowSize.width
+    bounds.height = settings.windowSize.height
+  }
 
   mainWindow = new BrowserWindow({
     ...bounds,
-    resizable: false,
+    resizable: true,
+    minWidth: MIN_WINDOW_WIDTH,
+    minHeight: MIN_WINDOW_HEIGHT,
     frame: false,
     alwaysOnTop: settings.alwaysOnTop,
     opacity: settings.opacity,
@@ -57,15 +65,19 @@ function createWindow(settings) {
     mainWindow.hide()
   })
 
-  mainWindow.on('move', () => {
+  const scheduleSaveWindowState = () => {
     if (!settingsService.readSettings().rememberPosition) return
-    clearTimeout(savePositionTimer)
-    savePositionTimer = setTimeout(() => {
+    clearTimeout(saveWindowStateTimer)
+    saveWindowStateTimer = setTimeout(() => {
       if (!mainWindow || mainWindow.isDestroyed()) return
       const [x, y] = mainWindow.getPosition()
-      settingsService.writeSettings({ windowPosition: { x, y } })
+      const [width, height] = mainWindow.getSize()
+      settingsService.writeSettings({ windowPosition: { x, y }, windowSize: { width, height } })
     }, 400)
-  })
+  }
+
+  mainWindow.on('move', scheduleSaveWindowState)
+  mainWindow.on('resize', scheduleSaveWindowState)
 }
 
 function createTray() {
