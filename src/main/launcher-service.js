@@ -1,6 +1,6 @@
 const fs = require('fs')
 const { shell } = require('electron')
-const { getWorkMode, isValidHttpUrl, TARGET_KEYS } = require('./config-service')
+const { getWorkMode, isValidHttpUrl, isNetworkOrDevicePath, TARGET_KEYS } = require('./config-service')
 
 const TYPE_OF_KEY = { urls: 'url', files: 'file', folders: 'folder' }
 
@@ -19,6 +19,11 @@ function checkTarget(key, value) {
   if (key === 'urls') {
     if (!isValidHttpUrl(value)) return { ok: false, reason: '不正なURLです' }
     return { ok: true }
+  }
+  // data/work-modes.json を直接書き換えられた場合でも、ネットワークパスには触れずに弾く
+  // (fs.existsSync の時点で外部ホストへ接続が発生してしまうため、実在確認より前に判定する)。
+  if (isNetworkOrDevicePath(value)) {
+    return { ok: false, reason: 'ネットワークパスは開けません' }
   }
   if (!fs.existsSync(value)) {
     return { ok: false, reason: 'ファイルが見つかりません' }

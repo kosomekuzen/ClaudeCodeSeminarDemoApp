@@ -250,6 +250,19 @@ async function openPreview(id, name) {
   showView('preview')
 }
 
+// 開くと「表示」ではなく「実行」されうる拡張子。ブロックはせず、確認画面で目立たせる。
+const EXECUTABLE_EXTENSIONS = [
+  '.exe', '.bat', '.cmd', '.com', '.scr', '.pif', '.hta', '.msi', '.reg',
+  '.vbs', '.vbe', '.js', '.jse', '.wsf', '.wsh', '.ps1', '.lnk', '.url',
+  '.command', '.sh', '.app', '.tool',
+]
+
+function isExecutableTarget(row) {
+  if (row.type !== 'file') return false
+  const value = String(row.value || '').toLowerCase()
+  return EXECUTABLE_EXTENSIONS.some((ext) => value.endsWith(ext))
+}
+
 function renderPreviewRows(rows) {
   els.previewRows.innerHTML = ''
   rows.forEach((r) => {
@@ -261,13 +274,26 @@ function renderPreviewRows(rows) {
     const labelTd = document.createElement('td')
     labelTd.className = 'label-cell'
     labelTd.textContent = r.label
-    labelTd.title = r.value
+
+    // 実際に開くURL/パスを必ず画面に出す。表示名は自由に付けられるため、
+    // 表示名だけを見せると「何を開こうとしているのか」を確認できない。
+    const valueTd = document.createElement('td')
+    valueTd.className = 'value-cell'
+    valueTd.textContent = r.value
+    valueTd.title = r.value
+    if (isExecutableTarget(r)) {
+      valueTd.appendChild(document.createTextNode(' '))
+      const warn = document.createElement('span')
+      warn.className = 'exec-warning'
+      warn.textContent = '実行ファイル'
+      valueTd.appendChild(warn)
+    }
 
     const statusTd = document.createElement('td')
     statusTd.textContent = r.statusText
     statusTd.className = r.ok ? 'status-ok' : 'status-ng'
 
-    tr.append(typeTd, labelTd, statusTd)
+    tr.append(typeTd, labelTd, valueTd, statusTd)
     els.previewRows.appendChild(tr)
   })
 }
@@ -410,7 +436,11 @@ els.importButton.addEventListener('click', async () => {
     els.dataStatus.classList.add('is-error')
     return
   }
-  els.dataStatus.textContent = `${result.importedCount}件の業務モードを読み込みました`
+  // 何が追加されたのかを名前で示す。実際に開く対象は起動確認画面で全件確認できる。
+  const names = (result.importedNames || []).join('、')
+  els.dataStatus.textContent = names
+    ? `${result.importedCount}件を読み込みました: ${names}(開く対象は「開始」時の確認画面で確認できます)`
+    : `${result.importedCount}件の業務モードを読み込みました`
   els.dataStatus.classList.remove('is-error')
   loadDashboard()
 })

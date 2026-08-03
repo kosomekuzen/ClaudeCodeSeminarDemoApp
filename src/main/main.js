@@ -287,5 +287,11 @@ ipcMain.handle('data:import', async () => {
     }
   })
 
-  return { canceled: false, importedCount: imported.length, errors }
+  // 読み込んだ内容は必ず名前で返す。件数だけだと、何が追加されたのか利用者が確認できない。
+  return {
+    canceled: false,
+    importedCount: imported.length,
+    importedNames: imported.map((m) => m.name),
+    errors,
+  }
 })

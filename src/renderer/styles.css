@@ -321,6 +321,24 @@ button {
   color: var(--text);
 }
 
+.preview-table td.value-cell {
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  word-break: break-all;
+  max-width: 150px;
+}
+
+.exec-warning {
+  display: inline-block;
+  color: #fff;
+  background: var(--danger);
+  border-radius: var(--radius);
+  padding: 0 4px;
+  font-size: 0.66rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
 .status-ok {
   color: var(--success);
   font-weight: 700;

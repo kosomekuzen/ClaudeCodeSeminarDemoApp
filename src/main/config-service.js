@@ -60,7 +60,15 @@ function isValidHttpUrl(value) {
   }
 }
 
+// UNC(`\\host\share`)や `\\?\` `\\.\` などのネットワーク/デバイスパスを弾く。
+// Windowsではこの手のパスに fs.existsSync で触れるだけでSMB接続が発生し、
+// 資格情報(NTLM)が相手ホストへ送られてしまうため、実在確認より前に必ず拒否する。
+function isNetworkOrDevicePath(value) {
+  return /^[\\/]{2}/.test(value)
+}
+
 function isAbsolutePath(value) {
+  if (isNetworkOrDevicePath(value)) return false
   return path.isAbsolute(value) || /^[a-zA-Z]:[\\/]/.test(value)
 }
 
@@ -77,6 +85,10 @@ function validateEntry(type, entry) {
     return null
   }
 
+  // 実在確認(fs)より前に判定する。ネットワークパスは触れた時点で外部へ接続が発生するため。
+  if (isNetworkOrDevicePath(entry.value)) {
+    return 'ネットワークパス(\\\\で始まるパス)は登録できません。ローカルのパスを指定してください'
+  }
   if (!isAbsolutePath(entry.value)) {
     return `絶対パスで入力してください(例: ${PATH_EXAMPLE.file})`
   }
@@ -163,6 +175,7 @@ module.exports = {
   PATH_EXAMPLE,
   labelFor,
   isValidHttpUrl,
+  isNetworkOrDevicePath,
   listWorkModes,
   getWorkMode,
   createWorkMode,
