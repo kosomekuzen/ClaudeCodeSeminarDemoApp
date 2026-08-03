@@ -1,0 +1,14 @@
+{
+  "name": "my-work-launcher",
+  "version": "0.1.0",
+  "private": true,
+  "description": "業務モードごとに登録したURL・ファイル・フォルダを一括で開くWindows向けローカルランチャー(MVP)",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js"
+  },
+  "license": "UNLICENSED",
+  "dependencies": {
+    "express": "^5.2.1"
+  }
+}
