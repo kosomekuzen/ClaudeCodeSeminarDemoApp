@@ -22,7 +22,8 @@ my-work-launcher/
 │     ├─ styles.css
 │     └─ app.js
 ├─ build/
-│  └─ icon.png                トレイ・ウィンドウ用アイコン(プレースホルダー。差し替え可)
+│  ├─ icon.png                 トレイ・ウィンドウ用アイコン(プレースホルダー。差し替え可)
+│  └─ icon.ico                 デスクトップショートカット用アイコン(同上)
 ├─ data/
 │  └─ work-modes.json         登録内容(ローカル専用。Gitには含めない)
 └─ .claude/
@@ -31,13 +32,29 @@ my-work-launcher/
       └─ extend-registration/  登録機能を拡張するときの開発手順(日常実行では使わない)
 ```
 
-## 動かし方
+`scripts/generate-icon.mjs` が `build/icon.png` / `build/icon.ico` を生成し、`scripts/create-desktop-shortcut.vbs` がデスクトップショートカットを作る(下記参照)。
+
+## 初回セットアップ(Windows)
 
 前提: Node.js 18以降。対象アプリ自体はWindows 10/11向けです。
 
+1. ターミナルで依存パッケージをインストールする
+
+   ```bash
+   cd my-work-launcher
+   npm install
+   ```
+
+2. `scripts/create-desktop-shortcut.vbs` を**エクスプローラーでダブルクリック**して実行する
+   → デスクトップに「自分専用業務ランチャー」のショートカットができる
+
+3. 以降は、そのデスクトップアイコンをダブルクリックするだけで起動できる
+
+このショートカットは `node_modules\electron\dist\electron.exe` を直接起動するので、`npm start`(ターミナル経由)と違って**ターミナルを閉じてもアプリは終了しません**。ターミナルを一切使わずに起動・終了できます。
+
+開発中にコードを変更してすぐ試したいときは、これまで通り以下でも起動できます(この場合はターミナルに紐づくので、ターミナルを閉じるとアプリも終了します)。
+
 ```bash
-cd my-work-launcher
-npm install
 npm start
 ```
 
@@ -54,10 +71,10 @@ npm start
 
 ## スタートアップ登録(任意)
 
-`creditmonitoring` と同様に、Windowsのスタートアップフォルダにショートカットを置くと、PC起動時に自動で立ち上がります。
+`creditmonitoring` と同様に、PC起動時に自動で立ち上げたい場合は、デスクトップにできたショートカット(「自分専用業務ランチャー.lnk」)をコピーして、スタートアップフォルダに貼り付ければよい。
 
 1. `Win + R` → `shell:startup` でスタートアップフォルダを開く
-2. `node_modules\electron\dist\electron.exe` へのショートカットを作成し、リンク先の引数にこのプロジェクトのフォルダパスを追加する(例: `electron.exe "C:\path\to\my-work-launcher"`)
+2. デスクトップの「自分専用業務ランチャー」ショートカットをコピー&ペースト(またはショートカットの再作成)する
 
 ## 安全設計
 
@@ -70,5 +87,5 @@ npm start
 ## 既知の制約(MVPスコープ外)
 
 - ファイル・フォルダの「選択ダイアログ」による指定には対応していません。今回はテキスト入力によるパス指定のみです(Electronの `dialog.showOpenDialog` を使えば追加は可能です)
-- `build/icon.png` は仮のプレースホルダーです。同じファイル名で本物のロゴ画像に差し替えれば反映されます
-- インストーラー化(electron-builder等でのパッケージング)は行っていません。`npm start` での起動を前提にしています
+- `build/icon.png` / `build/icon.ico` は仮のプレースホルダーです。同じファイル名で本物のロゴ画像に差し替えて `npm run generate:icon` の代わりに配置すれば反映されます
+- インストーラー化(electron-builder等での.exeパッケージング)は行っていません。デスクトップショートカット経由での起動を前提にしています(それでも `npm install` は最初に一度必要です)
