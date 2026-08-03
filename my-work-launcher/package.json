@@ -1,14 +1,15 @@
 {
   "name": "my-work-launcher",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
-  "description": "業務モードごとに登録したURL・ファイル・フォルダを一括で開くWindows向けローカルランチャー(MVP)",
-  "main": "server/server.js",
+  "description": "業務モードごとに登録したURL・ファイル・フォルダを一括で開く、常駐型のWindows向けデスクトップウィジェット",
+  "main": "src/main/main.js",
   "scripts": {
-    "start": "node server/server.js"
+    "start": "electron .",
+    "generate:icon": "node scripts/generate-icon.mjs"
   },
   "license": "UNLICENSED",
-  "dependencies": {
-    "express": "^5.2.1"
+  "devDependencies": {
+    "electron": "^43.2.0"
   }
 }

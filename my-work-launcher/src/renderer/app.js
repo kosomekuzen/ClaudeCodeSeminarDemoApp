@@ -7,6 +7,7 @@ const TARGET_TYPES = [
 const TYPE_LABEL_JA = { url: 'URL', file: 'ファイル', folder: 'フォルダ' }
 
 const els = {
+  hideButton: document.getElementById('hide-button'),
   views: {
     dashboard: document.getElementById('view-dashboard'),
     edit: document.getElementById('view-edit'),
@@ -27,7 +28,6 @@ const els = {
 
 let editingId = null // null = 新規登録
 let previewModeId = null
-let previewModeName = ''
 
 // ---- 画面切り替え ----
 
@@ -44,26 +44,12 @@ document.querySelectorAll('[data-action="back-to-dashboard"]').forEach((btn) => 
   })
 })
 
-// ---- API ----
-
-async function api(path, options) {
-  const res = await fetch(path, {
-    headers: { 'Content-Type': 'application/json' },
-    ...options,
-  })
-  const data = await res.json().catch(() => ({}))
-  if (!res.ok) {
-    const err = new Error((data.errors && data.errors.join(' / ')) || 'エラーが発生しました')
-    err.errors = data.errors
-    throw err
-  }
-  return data
-}
+els.hideButton.addEventListener('click', () => window.launcherAPI.hideWindow())
 
 // ---- ダッシュボード ----
 
 async function loadDashboard() {
-  const { workModes } = await api('/api/work-modes')
+  const workModes = await window.launcherAPI.listWorkModes()
   els.modeCards.innerHTML = ''
   els.modeEmpty.hidden = workModes.length > 0
 
@@ -110,7 +96,7 @@ async function loadDashboard() {
 
 async function deleteMode(id, name) {
   if (!confirm(`「${name}」を削除します。よろしいですか？`)) return
-  await api(`/api/work-modes/${id}`, { method: 'DELETE' })
+  await window.launcherAPI.deleteWorkMode(id)
   loadDashboard()
 }
 
@@ -120,6 +106,9 @@ function makeRow(type, entry) {
   const typeDef = TARGET_TYPES.find((t) => t.key === type)
   const row = document.createElement('div')
   row.className = 'target-row'
+
+  const inputs = document.createElement('div')
+  inputs.className = 'row-inputs'
 
   const labelInput = document.createElement('input')
   labelInput.type = 'text'
@@ -133,13 +122,15 @@ function makeRow(type, entry) {
   valueInput.value = entry?.value || ''
   valueInput.dataset.field = 'value'
 
+  inputs.append(labelInput, valueInput)
+
   const removeBtn = document.createElement('button')
   removeBtn.type = 'button'
   removeBtn.className = 'remove-row'
   removeBtn.textContent = '削除'
   removeBtn.addEventListener('click', () => row.remove())
 
-  row.append(labelInput, valueInput, removeBtn)
+  row.append(inputs, removeBtn)
   return row
 }
 
@@ -196,24 +187,23 @@ async function saveMode() {
     folders: collectRows('folders'),
   }
 
-  try {
-    if (editingId) {
-      await api(`/api/work-modes/${editingId}`, { method: 'PUT', body: JSON.stringify(payload) })
-    } else {
-      await api('/api/work-modes', { method: 'POST', body: JSON.stringify(payload) })
-    }
-    showView('dashboard')
-    loadDashboard()
-  } catch (err) {
-    const messages = err.errors && err.errors.length ? err.errors : [err.message]
+  const result = editingId
+    ? await window.launcherAPI.updateWorkMode(editingId, payload)
+    : await window.launcherAPI.createWorkMode(payload)
+
+  if (result.errors) {
     els.editErrors.innerHTML = ''
-    messages.forEach((m) => {
+    result.errors.forEach((m) => {
       const li = document.createElement('li')
       li.textContent = m
       els.editErrors.appendChild(li)
     })
     els.editErrors.hidden = false
+    return
   }
+
+  showView('dashboard')
+  loadDashboard()
 }
 
 els.saveModeButton.addEventListener('click', saveMode)
@@ -222,13 +212,12 @@ els.saveModeButton.addEventListener('click', saveMode)
 
 async function openPreview(id, name) {
   previewModeId = id
-  previewModeName = name
   els.previewTitle.textContent = `起動確認: ${name}`
   els.launchStatus.textContent = ''
   els.launchStatus.classList.remove('is-error')
   els.launchButton.disabled = false
 
-  const { targets } = await api(`/api/work-modes/${id}/preview`)
+  const targets = await window.launcherAPI.previewWorkMode(id)
   renderPreviewRows(
     targets.map((t) => ({ ...t, statusText: t.willOpen ? '開けます' : t.reason, ok: t.willOpen }))
   )
@@ -244,17 +233,15 @@ function renderPreviewRows(rows) {
     typeTd.textContent = TYPE_LABEL_JA[r.type] || r.type
 
     const labelTd = document.createElement('td')
+    labelTd.className = 'label-cell'
     labelTd.textContent = r.label
-
-    const valueTd = document.createElement('td')
-    valueTd.className = 'value-cell'
-    valueTd.textContent = r.value
+    labelTd.title = r.value
 
     const statusTd = document.createElement('td')
     statusTd.textContent = r.statusText
     statusTd.className = r.ok ? 'status-ok' : 'status-ng'
 
-    tr.append(typeTd, labelTd, valueTd, statusTd)
+    tr.append(typeTd, labelTd, statusTd)
     els.previewRows.appendChild(tr)
   })
 }
@@ -265,20 +252,14 @@ els.launchButton.addEventListener('click', async () => {
   els.launchStatus.textContent = '起動しています…'
   els.launchStatus.classList.remove('is-error')
 
-  try {
-    const { results } = await api(`/api/work-modes/${previewModeId}/launch`, { method: 'POST' })
-    renderPreviewRows(
-      results.map((r) => ({ ...r, statusText: r.success ? '開きました' : r.reason, ok: r.success }))
-    )
-    const failCount = results.filter((r) => !r.success).length
-    els.launchStatus.textContent = failCount > 0 ? `完了(${failCount}件失敗)` : '完了しました'
-    if (failCount > 0) els.launchStatus.classList.add('is-error')
-  } catch (err) {
-    els.launchStatus.textContent = err.message
-    els.launchStatus.classList.add('is-error')
-  } finally {
-    els.launchButton.disabled = false
-  }
+  const results = await window.launcherAPI.launchWorkMode(previewModeId)
+  renderPreviewRows(
+    results.map((r) => ({ ...r, statusText: r.success ? '開きました' : r.reason, ok: r.success }))
+  )
+  const failCount = results.filter((r) => !r.success).length
+  els.launchStatus.textContent = failCount > 0 ? `完了(${failCount}件失敗)` : '完了しました'
+  if (failCount > 0) els.launchStatus.classList.add('is-error')
+  els.launchButton.disabled = false
 })
 
 // ---- 初期化 ----

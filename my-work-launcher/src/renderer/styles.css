@@ -16,44 +16,70 @@
   box-sizing: border-box;
 }
 
-body {
+html, body {
   margin: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
   font-family: -apple-system, "Hiragino Sans", "Yu Gothic", "Segoe UI", sans-serif;
   background: var(--bg);
   color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
 }
 
-.app-header {
-  padding: 28px 32px 16px;
+.title-bar {
+  -webkit-app-region: drag;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: var(--text);
+  color: #fff;
+  border-radius: 12px 12px 0 0;
+  flex: 0 0 auto;
 }
 
-.app-header h1 {
-  margin: 0 0 4px;
-  font-size: 1.5rem;
+.title-bar-name {
+  font-size: 0.82rem;
+  font-weight: 600;
 }
 
-.app-sub {
-  margin: 0;
-  color: var(--text-muted);
+.title-bar-hide {
+  -webkit-app-region: no-drag;
+  background: none;
+  border: none;
+  color: #fff;
   font-size: 0.9rem;
+  cursor: pointer;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.title-bar-hide:hover {
+  background: rgba(255, 255, 255, 0.15);
 }
 
 .app-main {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 0 32px 40px;
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 16px;
 }
 
 .view-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
 .view-header h2 {
   margin: 0;
-  font-size: 1.1rem;
+  font-size: 1rem;
 }
 
 button {
@@ -68,8 +94,9 @@ button {
   color: #fff;
   border: none;
   border-radius: var(--radius);
-  padding: 10px 20px;
+  padding: 8px 16px;
   font-weight: 600;
+  font-size: 0.85rem;
 }
 
 #add-mode-button:hover,
@@ -87,8 +114,8 @@ button {
   background: none;
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 6px 12px;
-  font-size: 0.82rem;
+  padding: 5px 10px;
+  font-size: 0.78rem;
   color: var(--text);
 }
 
@@ -98,32 +125,33 @@ button {
 }
 
 .mode-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .mode-card {
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 16px;
+  padding: 12px 14px;
 }
 
 .mode-card-name {
   font-weight: 600;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
+  font-size: 0.92rem;
 }
 
 .mode-card-count {
   color: var(--text-muted);
-  font-size: 0.82rem;
-  margin-bottom: 12px;
+  font-size: 0.78rem;
+  margin-bottom: 10px;
 }
 
 .mode-card-actions {
   display: flex;
-  gap: 8px;
+  gap: 6px;
 }
 
 .mode-card-actions .primary {
@@ -131,8 +159,8 @@ button {
   color: #fff;
   border: none;
   border-radius: 8px;
-  padding: 6px 14px;
-  font-size: 0.85rem;
+  padding: 5px 12px;
+  font-size: 0.8rem;
 }
 
 .mode-card-actions .primary:hover {
@@ -141,12 +169,12 @@ button {
 
 .empty-message {
   color: var(--text-muted);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
 }
 
 .field-label {
   display: block;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: var(--text-muted);
   margin: 4px 0 6px;
 }
@@ -155,8 +183,9 @@ button {
   width: 100%;
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 10px 12px;
+  padding: 8px 10px;
   font: inherit;
+  font-size: 0.85rem;
   margin-bottom: 8px;
 }
 
@@ -164,28 +193,39 @@ button {
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 14px 16px;
-  margin-top: 14px;
+  padding: 10px 12px;
+  margin-top: 10px;
 }
 
 .target-group h3 {
-  margin: 0 0 10px;
-  font-size: 0.95rem;
+  margin: 0 0 8px;
+  font-size: 0.85rem;
 }
 
 .target-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) auto;
-  gap: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
   margin-bottom: 8px;
+  border-bottom: 1px dashed var(--border);
+  padding-bottom: 8px;
+}
+
+.target-row:last-child {
+  border-bottom: none;
+}
+
+.target-row .row-inputs {
+  display: flex;
+  gap: 6px;
 }
 
 .target-row input {
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 8px 10px;
+  padding: 6px 8px;
   font: inherit;
-  font-size: 0.85rem;
+  font-size: 0.78rem;
   width: 100%;
 }
 
@@ -193,8 +233,9 @@ button {
   background: none;
   border: none;
   color: var(--text-muted);
-  font-size: 0.85rem;
-  padding: 0 6px;
+  font-size: 0.75rem;
+  align-self: flex-end;
+  padding: 0;
 }
 
 .target-row .remove-row:hover {
@@ -203,20 +244,20 @@ button {
 
 .error-list {
   color: var(--danger);
-  font-size: 0.85rem;
-  margin: 14px 0 0;
-  padding-left: 1.2em;
+  font-size: 0.78rem;
+  margin: 12px 0 0;
+  padding-left: 1.1em;
 }
 
 .view-actions {
-  margin-top: 20px;
+  margin-top: 16px;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .run-status {
-  font-size: 0.85rem;
+  font-size: 0.78rem;
   color: var(--text-muted);
 }
 
@@ -231,25 +272,24 @@ button {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   overflow: hidden;
-  font-size: 0.85rem;
+  font-size: 0.78rem;
 }
 
 .preview-table th,
 .preview-table td {
   border-bottom: 1px solid var(--border);
-  padding: 10px 12px;
+  padding: 8px 10px;
   text-align: left;
 }
 
 .preview-table th {
   background: #f0f0ee;
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   color: var(--text-muted);
 }
 
-.preview-table td.value-cell {
-  word-break: break-all;
-  color: var(--text-muted);
+.preview-table td.label-cell {
+  color: var(--text);
 }
 
 .status-ok {
