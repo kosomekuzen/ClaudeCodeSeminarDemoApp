@@ -7,7 +7,7 @@ import { writeFileSync } from 'node:fs'
 
 const ICO_SIZES = [16, 32, 48, 256]
 const WINDOW_ICON_SIZE = 256
-const COLOR = [37, 99, 235, 255] // #2563eb
+const COLOR = [27, 79, 145, 255] // #1b4f91
 
 const CRC_TABLE = (() => {
   const table = new Uint32Array(256)
@@ -39,7 +39,7 @@ function chunk(type, data) {
 }
 
 function makePng(size) {
-  const radius = Math.round(size * 0.1875)
+  const radius = Math.round(size * 0.08)
 
   function insideRoundedSquare(x, y) {
     const cx = Math.min(Math.max(x, radius), size - 1 - radius)

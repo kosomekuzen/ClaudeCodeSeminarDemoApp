@@ -1,15 +1,15 @@
 :root {
   color-scheme: light;
-  --bg: #f5f5f4;
+  --bg: #eef1f5;
   --panel: #ffffff;
-  --border: #e2e2e0;
-  --text: #1f1f1d;
-  --text-muted: #6b6b66;
-  --accent: #2563eb;
-  --accent-hover: #1d4ed8;
+  --border: #ccd3da;
+  --text: #222222;
+  --text-muted: #666666;
+  --accent: #1b4f91;
+  --accent-hover: #123a6b;
   --danger: #b91c1c;
-  --success: #15803d;
-  --radius: 10px;
+  --success: #2e7d32;
+  --radius: 3px;
 }
 
 * {
@@ -23,11 +23,11 @@ html, body {
 }
 
 body {
-  font-family: -apple-system, "Hiragino Sans", "Yu Gothic", "Segoe UI", sans-serif;
+  font-family: system-ui, -apple-system, "Segoe UI", "Yu Gothic UI", "Hiragino Sans", sans-serif;
   background: var(--bg);
   color: var(--text);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 4px;
   display: flex;
   flex-direction: column;
 }
@@ -38,26 +38,33 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 10px 12px;
-  background: var(--text);
+  background: var(--accent);
   color: #fff;
-  border-radius: 12px 12px 0 0;
+  border-radius: 4px 4px 0 0;
   flex: 0 0 auto;
 }
 
 .title-bar-name {
   font-size: 0.82rem;
-  font-weight: 600;
+  font-weight: 700;
+}
+
+.title-bar-ver {
+  font-size: 0.68rem;
+  font-weight: 400;
+  color: #cfe0f2;
+  margin-left: 8px;
 }
 
 .title-bar-hide {
   -webkit-app-region: no-drag;
   background: none;
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.5);
   color: #fff;
-  font-size: 0.9rem;
+  font-size: 0.82rem;
   cursor: pointer;
   padding: 2px 8px;
-  border-radius: 6px;
+  border-radius: 3px;
 }
 
 .title-bar-hide:hover {
@@ -92,10 +99,10 @@ button {
 #launch-button {
   background: var(--accent);
   color: #fff;
-  border: none;
+  border: 1px solid var(--accent-hover);
   border-radius: var(--radius);
   padding: 8px 16px;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 0.85rem;
 }
 
@@ -107,13 +114,14 @@ button {
 
 #launch-button:disabled {
   background: #9ca3af;
+  border-color: #9ca3af;
   cursor: not-allowed;
 }
 
 .ghost-button {
-  background: none;
+  background: var(--panel);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius);
   padding: 5px 10px;
   font-size: 0.78rem;
   color: var(--text);
@@ -138,7 +146,7 @@ button {
 }
 
 .mode-card-name {
-  font-weight: 600;
+  font-weight: 700;
   margin-bottom: 2px;
   font-size: 0.92rem;
 }
@@ -157,8 +165,8 @@ button {
 .mode-card-actions .primary {
   background: var(--accent);
   color: #fff;
-  border: none;
-  border-radius: 8px;
+  border: 1px solid var(--accent-hover);
+  border-radius: var(--radius);
   padding: 5px 12px;
   font-size: 0.8rem;
 }
@@ -222,7 +230,7 @@ button {
 
 .target-row input {
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius);
   padding: 6px 8px;
   font: inherit;
   font-size: 0.78rem;
@@ -283,7 +291,7 @@ button {
 }
 
 .preview-table th {
-  background: #f0f0ee;
+  background: #e4ecf5;
   font-size: 0.72rem;
   color: var(--text-muted);
 }
@@ -294,10 +302,10 @@ button {
 
 .status-ok {
   color: var(--success);
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .status-ng {
   color: var(--danger);
-  font-weight: 600;
+  font-weight: 700;
 }
