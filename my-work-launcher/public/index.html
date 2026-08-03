@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>自分専用業務ランチャー</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <h1>自分専用業務ランチャー</h1>
+    <p class="app-sub">業務モードごとに登録したURL・ファイル・フォルダを、ボタン一つでまとめて開く</p>
+  </header>
+
+  <main class="app-main">
+    <!-- ダッシュボード -->
+    <section id="view-dashboard" class="view">
+      <div class="view-header">
+        <h2>業務モード</h2>
+        <button id="add-mode-button" type="button">業務モードを追加</button>
+      </div>
+      <div id="mode-cards" class="mode-cards"></div>
+      <p id="mode-empty" class="empty-message" hidden>まだ業務モードが登録されていません</p>
+    </section>
+
+    <!-- 登録・編集 -->
+    <section id="view-edit" class="view" hidden>
+      <div class="view-header">
+        <h2 id="edit-title">業務モードを追加</h2>
+        <button type="button" class="ghost-button" data-action="back-to-dashboard">戻る</button>
+      </div>
+
+      <label class="field-label" for="mode-name">業務モード名</label>
+      <input id="mode-name" type="text" placeholder="例: セミナー制作">
+
+      <div class="target-group">
+        <h3>URL</h3>
+        <div id="urls-rows" class="target-rows"></div>
+        <button type="button" class="ghost-button" data-add="urls">+ URLを追加</button>
+      </div>
+
+      <div class="target-group">
+        <h3>ファイル</h3>
+        <div id="files-rows" class="target-rows"></div>
+        <button type="button" class="ghost-button" data-add="files">+ ファイルを追加</button>
+      </div>
+
+      <div class="target-group">
+        <h3>フォルダ</h3>
+        <div id="folders-rows" class="target-rows"></div>
+        <button type="button" class="ghost-button" data-add="folders">+ フォルダを追加</button>
+      </div>
+
+      <ul id="edit-errors" class="error-list" hidden></ul>
+
+      <div class="view-actions">
+        <button id="save-mode-button" type="button">保存</button>
+      </div>
+    </section>
+
+    <!-- 起動確認・結果 -->
+    <section id="view-preview" class="view" hidden>
+      <div class="view-header">
+        <h2 id="preview-title">起動確認</h2>
+        <button type="button" class="ghost-button" data-action="back-to-dashboard">戻る</button>
+      </div>
+
+      <table class="preview-table">
+        <thead>
+          <tr><th>種類</th><th>表示名</th><th>URL / パス</th><th>状態</th></tr>
+        </thead>
+        <tbody id="preview-rows"></tbody>
+      </table>
+
+      <div class="view-actions">
+        <button id="launch-button" type="button">開始する</button>
+        <span id="launch-status" class="run-status" aria-live="polite"></span>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
