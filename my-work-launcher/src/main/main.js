@@ -38,7 +38,7 @@ function createWindow() {
 function createTray() {
   const icon = nativeImage.createFromPath(ICON_PATH).resize({ width: 16, height: 16 })
   tray = new Tray(icon)
-  tray.setToolTip('自分専用業務ランチャー')
+  tray.setToolTip('お仕事スイッチ')
   tray.setContextMenu(
     Menu.buildFromTemplate([
       { label: '開く', click: showWindow },
