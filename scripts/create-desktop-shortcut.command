@@ -12,9 +12,10 @@ ELECTRON="$PROJECT_DIR/node_modules/.bin/electron"
 SHORTCUT="$HOME/Desktop/お仕事スイッチ.command"
 
 if [ ! -x "$ELECTRON" ]; then
-  osascript -e 'display alert "セットアップエラー" message "Electronが見つかりません。先にプロジェクトフォルダで npm install を実行してください。" as critical' >/dev/null 2>&1 || true
-  echo "Electronが見つかりません: $ELECTRON" >&2
-  echo "先に npm install を実行してください。" >&2
+  msg="Electron本体が見つかりません。npm install が成功していても、Electron本体のダウンロードだけが失敗していることがあります。プロジェクトフォルダで npm run setup を実行してください。"
+  osascript -e "display alert \"セットアップエラー\" message \"$msg\" as critical" >/dev/null 2>&1 || true
+  echo "Electron本体が見つかりません: $ELECTRON" >&2
+  echo "プロジェクトフォルダで次を実行してください: npm run setup" >&2
   exit 1
 fi
 
