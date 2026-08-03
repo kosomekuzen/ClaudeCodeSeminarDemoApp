@@ -1,0 +1,15 @@
+{
+  "name": "my-work-launcher",
+  "version": "0.2.0",
+  "private": true,
+  "description": "業務モードごとに登録したURL・ファイル・フォルダを一括で開く、常駐型のWindows向けデスクトップウィジェット",
+  "main": "src/main/main.js",
+  "scripts": {
+    "start": "electron .",
+    "generate:icon": "node scripts/generate-icon.mjs"
+  },
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "electron": "^43.2.0"
+  }
+}

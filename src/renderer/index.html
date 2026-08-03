@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; object-src 'none'">
+<title>お仕事スイッチ</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="title-bar">
+    <span class="title-bar-name">お仕事スイッチ<span class="title-bar-ver">Ver 1.0</span></span>
+    <div class="title-bar-actions">
+      <button id="settings-button" class="title-bar-icon-btn" type="button" title="設定">⚙</button>
+      <button id="minimize-button" class="title-bar-icon-btn" type="button" title="最小化">_</button>
+      <button id="hide-button" class="title-bar-icon-btn" type="button" title="閉じる(トレイに格納されます)">✕</button>
+    </div>
+  </div>
+
+  <main class="app-main">
+    <!-- ダッシュボード -->
+    <section id="view-dashboard" class="view">
+      <div class="view-header">
+        <h2>業務モード</h2>
+        <button id="add-mode-button" type="button">追加</button>
+      </div>
+      <div id="mode-cards" class="mode-cards"></div>
+      <p id="mode-empty" class="empty-message" hidden>まだ業務モードが登録されていません</p>
+    </section>
+
+    <!-- 登録・編集 -->
+    <section id="view-edit" class="view" hidden>
+      <div class="view-header">
+        <h2 id="edit-title">業務モードを追加</h2>
+        <button type="button" class="ghost-button" data-action="back-to-dashboard">戻る</button>
+      </div>
+
+      <label class="field-label" for="mode-name">業務モード名</label>
+      <input id="mode-name" type="text" placeholder="例: セミナー制作">
+
+      <div class="target-group">
+        <h3>URL</h3>
+        <div id="urls-rows" class="target-rows"></div>
+        <button type="button" class="ghost-button" data-add="urls">+ URLを追加</button>
+      </div>
+
+      <div class="target-group">
+        <h3>ファイル</h3>
+        <div id="files-rows" class="target-rows"></div>
+        <button type="button" class="ghost-button" data-add="files">+ ファイルを追加</button>
+      </div>
+
+      <div class="target-group">
+        <h3>フォルダ</h3>
+        <div id="folders-rows" class="target-rows"></div>
+        <button type="button" class="ghost-button" data-add="folders">+ フォルダを追加</button>
+      </div>
+
+      <ul id="edit-errors" class="error-list" hidden></ul>
+
+      <div class="view-actions">
+        <button id="save-mode-button" type="button">保存</button>
+      </div>
+    </section>
+
+    <!-- 起動確認・結果 -->
+    <section id="view-preview" class="view" hidden>
+      <div class="view-header">
+        <h2 id="preview-title">起動確認</h2>
+        <button type="button" class="ghost-button" data-action="back-to-dashboard">戻る</button>
+      </div>
+
+      <table class="preview-table">
+        <thead>
+          <tr><th>種類</th><th>表示名</th><th>開く対象</th><th>状態</th></tr>
+        </thead>
+        <tbody id="preview-rows"></tbody>
+      </table>
+
+      <div class="view-actions">
+        <button id="launch-button" type="button">開始する</button>
+        <span id="launch-status" class="run-status" aria-live="polite"></span>
+      </div>
+    </section>
+
+    <!-- 設定 -->
+    <section id="view-settings" class="view" hidden>
+      <div class="view-header">
+        <h2>設定</h2>
+        <button type="button" class="ghost-button" data-action="back-to-dashboard">戻る</button>
+      </div>
+
+      <div class="settings-group">
+        <h3>見た目</h3>
+        <div class="settings-row">
+          <span class="settings-row-label">テーマ</span>
+          <select id="setting-theme" class="select-box">
+            <option value="system">システムに合わせる</option>
+            <option value="light">ライト</option>
+            <option value="dark">ダーク</option>
+          </select>
+        </div>
+        <div class="settings-row">
+          <span class="settings-row-label">アクセントカラー</span>
+          <div id="setting-accent-colors" class="color-row"></div>
+        </div>
+        <div class="settings-row">
+          <span class="settings-row-label">ウィンドウの透明度</span>
+          <div class="opacity-row">
+            <input id="setting-opacity" type="range" min="0.5" max="1" step="0.05">
+            <span id="setting-opacity-value" class="opacity-value">100%</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-group">
+        <h3>起動・常駐</h3>
+        <div class="settings-row">
+          <span class="settings-row-label">常に最前面に表示</span>
+          <input id="setting-always-on-top" type="checkbox" class="toggle-input">
+        </div>
+        <div class="settings-row">
+          <span class="settings-row-label">PC起動時に自動で立ち上げる</span>
+          <input id="setting-auto-launch" type="checkbox" class="toggle-input">
+        </div>
+        <div class="settings-row">
+          <div>
+            <div class="settings-row-label">ホットキーで呼び出す</div>
+            <div id="hotkey-desc" class="settings-row-desc">Ctrl + Shift + Space</div>
+          </div>
+          <input id="setting-hotkey" type="checkbox" class="toggle-input">
+        </div>
+        <div class="settings-row">
+          <span class="settings-row-label">ウィンドウの位置・サイズを記憶する</span>
+          <input id="setting-remember-position" type="checkbox" class="toggle-input">
+        </div>
+      </div>
+
+      <div class="settings-group">
+        <h3>実行</h3>
+        <div class="settings-row">
+          <div>
+            <div class="settings-row-label">起動前の確認をスキップする</div>
+            <div class="settings-row-desc">「開始」を押すと即座に実行します</div>
+          </div>
+          <input id="setting-skip-preview" type="checkbox" class="toggle-input">
+        </div>
+        <div class="settings-row">
+          <span class="settings-row-label">実行完了時に通知を表示する</span>
+          <input id="setting-notify" type="checkbox" class="toggle-input">
+        </div>
+      </div>
+
+      <div class="settings-group settings-group-last">
+        <h3>データ</h3>
+        <div class="settings-row">
+          <div>
+            <div class="settings-row-label">業務モードのバックアップ</div>
+            <div class="settings-row-desc">他のPCへの引き継ぎにも使えます</div>
+          </div>
+          <div class="data-actions">
+            <button id="export-data-button" class="data-btn" type="button">書き出し</button>
+            <button id="import-data-button" class="data-btn" type="button">読み込み</button>
+          </div>
+        </div>
+        <p id="data-status" class="run-status" aria-live="polite"></p>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
