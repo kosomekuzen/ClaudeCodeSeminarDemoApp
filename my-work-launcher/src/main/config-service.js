@@ -2,7 +2,7 @@ const fs = require('fs')
 const path = require('path')
 const crypto = require('crypto')
 
-const DATA_DIR = path.join(__dirname, '..', 'data')
+const DATA_DIR = path.join(__dirname, '..', '..', 'data')
 const DATA_FILE = path.join(DATA_DIR, 'work-modes.json')
 
 const TARGET_KEYS = ['urls', 'files', 'folders']

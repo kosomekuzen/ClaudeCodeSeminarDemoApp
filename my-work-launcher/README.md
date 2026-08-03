@@ -1,25 +1,32 @@
-# 自分専用業務ランチャー(MVP)
+# 自分専用業務ランチャー(Electronウィジェット版)
 
-業務モードごとに登録したURL・ファイル・フォルダを、ボタン一つでまとめて開くWindows向けローカルアプリです。
+業務モードごとに登録したURL・ファイル・フォルダを、ボタン一つでまとめて開く、タスクトレイ常駐型のWindows向けデスクトップウィジェットです。
 
-AIによる処理はランタイムでは行いません。登録した内容をそのまま、実行前のプレビュー確認を経て、Windowsの標準関連付けで開くだけの決定論的なツールです。
+AIによる処理はランタイムでは行いません。登録した内容をそのまま、実行前のプレビュー確認を経て、Electron標準の `shell.openExternal` / `shell.openPath` で開くだけの決定論的なツールです。
+
+`kosomekuzen/creditmonitoring`(Claude使用量を表示する常駐ウィジェット)と同じ構成 — Electronのメインプロセスがロジックを持ち、レンダラーとはIPCでやり取りする — に揃えています。
 
 ## 構成
 
 ```
 my-work-launcher/
-├─ public/            画面(ダッシュボード・登録編集・起動確認)
-│  ├─ index.html
-│  ├─ styles.css
-│  └─ app.js
-├─ server/
-│  ├─ server.js         Express。APIルーティングと静的配信
-│  ├─ config-service.js 業務モードのCRUDとバリデーション、data/work-modes.jsonの読み書き
-│  └─ launcher-service.js 実行直前の実在確認と、explorer.exe経由でのオープン処理
+├─ src/
+│  ├─ main/
+│  │  ├─ main.js             ウィンドウ・トレイの作成、IPCハンドラの登録
+│  │  ├─ config-service.js   業務モードのCRUDとバリデーション、data/work-modes.jsonの読み書き
+│  │  └─ launcher-service.js 実行直前の実在確認と、shell.openExternal/openPathでのオープン処理
+│  ├─ preload/
+│  │  └─ preload.js          contextBridgeで安全なAPI(window.launcherAPI)だけをレンダラーに公開
+│  └─ renderer/              画面(ダッシュボード・登録編集・起動確認)
+│     ├─ index.html
+│     ├─ styles.css
+│     └─ app.js
+├─ build/
+│  └─ icon.png                トレイ・ウィンドウ用アイコン(プレースホルダー。差し替え可)
 ├─ data/
-│  └─ work-modes.json   登録内容(ローカル専用。Gitには含めない)
+│  └─ work-modes.json         登録内容(ローカル専用。Gitには含めない)
 └─ .claude/
-   ├─ CLAUDE.md          技術方針・安全ルール・UI方針
+   ├─ CLAUDE.md                技術方針・安全ルール・UI方針
    └─ skills/
       └─ extend-registration/  登録機能を拡張するときの開発手順(日常実行では使わない)
 ```
@@ -34,25 +41,34 @@ npm install
 npm start
 ```
 
-[http://localhost:4021](http://localhost:4021) を開く。
+起動すると、画面右下あたりに小さなウィンドウが表示され、タスクトレイにもアイコンが常駐します。
 
 ## 使い方
 
-1. 「業務モードを追加」から、業務モード名とURL・ファイル・フォルダを登録する(パスは絶対パスで直接入力する)
+1. 「追加」から、業務モード名とURL・ファイル・フォルダを登録する(パスは絶対パスで直接入力する)
 2. ダッシュボードのカードから「開始」を押す
-3. 起動確認画面で、開く対象と状態(開けるか/開けないか)を確認する
+3. 起動確認画面で、開く対象と状態(開けるか/開けないか)を確認する(表示名にカーソルを合わせると実際のURL/パスがツールチップで見える)
 4. 「開始する」を押すと、登録済みの対象を順番に開く。対象ごとの成功・失敗が画面に表示される
+
+ウィンドウ右上の「─」でトレイに格納。トレイアイコンをクリックすると再表示、右クリックで「開く」「終了」を選べます。閉じるボタンではプロセスは終了しません(常駐)。
+
+## スタートアップ登録(任意)
+
+`creditmonitoring` と同様に、Windowsのスタートアップフォルダにショートカットを置くと、PC起動時に自動で立ち上がります。
+
+1. `Win + R` → `shell:startup` でスタートアップフォルダを開く
+2. `node_modules\electron\dist\electron.exe` へのショートカットを作成し、リンク先の引数にこのプロジェクトのフォルダパスを追加する(例: `electron.exe "C:\path\to\my-work-launcher"`)
 
 ## 安全設計
 
-- ユーザー入力をシェル(PowerShell・コマンドプロンプト)に渡さない。`execFile('explorer.exe', [target])` で、引数配列としてそのまま渡す
-- URLは `http://` / `https://` のみ許可
+- レンダラーはメインプロセスのAPIに直接アクセスできない(`contextIsolation: true` / `nodeIntegration: false`)。`contextBridge` で公開した `window.launcherAPI` 経由のIPCのみで通信する
+- ユーザー入力をシェル(PowerShell・コマンドプロンプト)に渡さない。URL/ファイル/フォルダはElectron標準の `shell.openExternal` / `shell.openPath` で開く(いずれもシェルを経由しないOS API呼び出し)
 - ファイル・フォルダは「開く」以外の操作(作成・更新・移動・削除)を行わない
 - 登録時・実行直前の両方でパスの実在確認を行い、存在しない対象は開かずに理由を表示する
 - 一括起動の前に必ずプレビューを表示し、確認を挟む
-- サーバーは `127.0.0.1` のみで待ち受け、他端末からはアクセスできない
 
 ## 既知の制約(MVPスコープ外)
 
-- ファイル・フォルダの「選択ダイアログ」による指定には対応していません。ブラウザの `<input type="file">` はセキュリティ上の理由で実際の絶対パスを返さないため、素のWeb技術だけでは実現できません。今回はテキスト入力によるパス指定のみです。ネイティブの選択ダイアログが必要な場合は、Electron化や小さなネイティブヘルパーの追加が必要になります
-- `explorer.exe` は正常に開いた場合でも0以外の終了コードを返すことがあるため(Windowsの既知の挙動)、起動処理自体を発行できたかどうかのみを成功判定に使っています
+- ファイル・フォルダの「選択ダイアログ」による指定には対応していません。今回はテキスト入力によるパス指定のみです(Electronの `dialog.showOpenDialog` を使えば追加は可能です)
+- `build/icon.png` は仮のプレースホルダーです。同じファイル名で本物のロゴ画像に差し替えれば反映されます
+- インストーラー化(electron-builder等でのパッケージング)は行っていません。`npm start` での起動を前提にしています

@@ -1,5 +1,5 @@
 const fs = require('fs')
-const { execFile } = require('child_process')
+const { shell } = require('electron')
 const { getWorkMode, isValidHttpUrl, TARGET_KEYS } = require('./config-service')
 
 const TYPE_OF_KEY = { urls: 'url', files: 'file', folders: 'folder' }
@@ -38,21 +38,36 @@ function preview(workModeId) {
   })
 }
 
-// explorer.exeはシェルを経由せず、渡した文字列をそのまま1つの引数として受け取って開く。
-// URL(http/https)・ファイル・フォルダのいずれもWindowsの標準関連付けで開くため、
-// cmd.exeの`start`のようなシェル文字列解釈を経由しない。
-function openWithOS(value) {
-  return new Promise((resolve) => {
-    execFile('explorer.exe', [value], { timeout: 10_000 }, (err) => {
-      if (err && err.code === 'ENOENT') {
-        resolve({ ok: false, reason: 'explorer.exeが見つかりません(Windows以外の環境では起動できません)' })
-        return
-      }
-      // explorer.exeは正常に開いた場合でも0以外の終了コードを返すことがある
-      // (Windowsの既知の挙動)。起動コマンド自体を発行できなかった場合のみ失敗として扱う。
-      resolve({ ok: true })
-    })
+const OPEN_TIMEOUT_MS = 10_000
+
+function withTimeout(promise, ms) {
+  let timer
+  const timeout = new Promise((resolve) => {
+    timer = setTimeout(() => resolve({ timedOut: true }), ms)
   })
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer))
+}
+
+// Electronのshellモジュール経由で開く。cmd.exeやPowerShellを一切経由しない
+// (shell.openExternalはOSのURLハンドラ、shell.openPathはOSのファイル関連付けを直接呼ぶ)。
+// 手製でexplorer.exeをexecFileしていた実装より、成功/失敗の判定も素直に取れる。
+// ただしshell.openPathはOS側にハンドラが無い等の状況で解決しないまま固まることがあるため、
+// タイムアウトを必ず設けて「1件詰まると残り全部が起動しない」事態を避ける。
+async function openWithOS(type, value) {
+  if (type === 'url') {
+    const result = await withTimeout(
+      shell.openExternal(value).then(() => ({ ok: true })).catch(() => ({ ok: false, reason: 'URLを開けませんでした' })),
+      OPEN_TIMEOUT_MS
+    )
+    if (result.timedOut) return { ok: false, reason: '起動がタイムアウトしました' }
+    return result
+  }
+
+  // shell.openPathは例外を投げず、失敗時は空でないエラー文字列を返す
+  const result = await withTimeout(shell.openPath(value), OPEN_TIMEOUT_MS)
+  if (result && result.timedOut) return { ok: false, reason: '起動がタイムアウトしました' }
+  if (result) return { ok: false, reason: `開けませんでした(${result})` }
+  return { ok: true }
 }
 
 async function launch(workModeId) {
@@ -67,7 +82,7 @@ async function launch(workModeId) {
       results.push({ type: t.type, label: t.label, value: t.value, success: false, reason: check.reason })
       continue
     }
-    const opened = await openWithOS(t.value)
+    const opened = await openWithOS(t.type, t.value)
     results.push({ type: t.type, label: t.label, value: t.value, success: opened.ok, reason: opened.ok ? null : opened.reason })
   }
   return results
