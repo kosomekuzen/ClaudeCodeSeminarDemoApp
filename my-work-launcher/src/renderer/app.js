@@ -8,6 +8,7 @@ const TYPE_LABEL_JA = { url: 'URL', file: 'ファイル', folder: 'フォルダ'
 
 const els = {
   hideButton: document.getElementById('hide-button'),
+  minimizeButton: document.getElementById('minimize-button'),
   views: {
     dashboard: document.getElementById('view-dashboard'),
     edit: document.getElementById('view-edit'),
@@ -45,6 +46,7 @@ document.querySelectorAll('[data-action="back-to-dashboard"]').forEach((btn) => 
 })
 
 els.hideButton.addEventListener('click', () => window.launcherAPI.hideWindow())
+els.minimizeButton.addEventListener('click', () => window.launcherAPI.minimizeWindow())
 
 // ---- ダッシュボード ----
 

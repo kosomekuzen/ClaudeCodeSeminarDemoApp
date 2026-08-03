@@ -8,4 +8,5 @@ contextBridge.exposeInMainWorld('launcherAPI', {
   previewWorkMode: (id) => ipcRenderer.invoke('work-modes:preview', id),
   launchWorkMode: (id) => ipcRenderer.invoke('work-modes:launch', id),
   hideWindow: () => ipcRenderer.invoke('window:hide'),
+  minimizeWindow: () => ipcRenderer.invoke('window:minimize'),
 })

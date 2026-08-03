@@ -2,13 +2,17 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; object-src 'none'">
 <title>お仕事スイッチ</title>
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <div class="title-bar">
     <span class="title-bar-name">お仕事スイッチ<span class="title-bar-ver">Ver 1.0</span></span>
-    <button id="hide-button" class="title-bar-hide" type="button" title="トレイに格納">_</button>
+    <div class="title-bar-actions">
+      <button id="minimize-button" class="title-bar-icon-btn" type="button" title="最小化">_</button>
+      <button id="hide-button" class="title-bar-icon-btn" type="button" title="閉じる(トレイに格納されます)">✕</button>
+    </div>
   </div>
 
   <main class="app-main">
