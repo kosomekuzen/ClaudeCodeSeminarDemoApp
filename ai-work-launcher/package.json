@@ -1,9 +1,0 @@
-{
-  "name": "ai-work-launcher",
-  "version": "0.1.0",
-  "private": true,
-  "description": "業務をボタン化してClaude Codeに処理させる自分専用ランチャー(講座デモ用プロトタイプ)",
-  "scripts": {
-    "start": "node server/server.js"
-  }
-}
