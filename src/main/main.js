@@ -16,6 +16,7 @@ const configService = require('./config-service')
 const launcherService = require('./launcher-service')
 const settingsService = require('./settings-service')
 
+const IS_MAC = process.platform === 'darwin'
 const ICON_PATH = path.join(__dirname, '..', '..', 'build', 'icon.png')
 const WINDOW_WIDTH = 420
 const WINDOW_HEIGHT = 640
@@ -27,6 +28,7 @@ let mainWindow = null
 let tray = null
 let isQuitting = false
 let saveWindowStateTimer = null
+let hotkeyRegistered = true
 
 function createWindow(settings) {
   const bounds = { width: WINDOW_WIDTH, height: WINDOW_HEIGHT }
@@ -82,27 +84,44 @@ function createWindow(settings) {
 
 function createTray() {
   const icon = nativeImage.createFromPath(ICON_PATH).resize({ width: 16, height: 16 })
+  // macOSのメニューバーはテンプレート画像(アルファのみを使う単色画像)にすると、
+  // ライト/ダークのメニューバーに自動で追従する。
+  if (IS_MAC) icon.setTemplateImage(true)
+
   tray = new Tray(icon)
   tray.setToolTip('お仕事スイッチ')
-  tray.setContextMenu(
-    Menu.buildFromTemplate([
-      { label: '開く', click: showWindow },
-      { type: 'separator' },
-      { label: '終了', click: () => { isQuitting = true; app.quit() } },
-    ])
-  )
-  tray.on('click', () => {
-    if (mainWindow.isVisible()) {
-      mainWindow.hide()
-    } else {
-      showWindow()
-    }
-  })
+
+  const contextMenu = Menu.buildFromTemplate([
+    { label: '開く', click: showWindow },
+    { type: 'separator' },
+    { label: '終了', click: () => { isQuitting = true; app.quit() } },
+  ])
+
+  if (IS_MAC) {
+    // macOSでsetContextMenuすると左クリックでもメニューが開いてしまい、
+    // クリックでの表示/非表示の切り替えができなくなる。左右で役割を分ける。
+    tray.on('click', toggleWindow)
+    tray.on('right-click', () => tray.popUpContextMenu(contextMenu))
+  } else {
+    tray.setContextMenu(contextMenu)
+    tray.on('click', toggleWindow)
+  }
 }
 
 function showWindow() {
+  if (!mainWindow || mainWindow.isDestroyed()) return
+  if (mainWindow.isMinimized()) mainWindow.restore()
   mainWindow.show()
   mainWindow.focus()
+}
+
+function toggleWindow() {
+  if (!mainWindow || mainWindow.isDestroyed()) return
+  if (mainWindow.isVisible() && !mainWindow.isMinimized()) {
+    mainWindow.hide()
+  } else {
+    showWindow()
+  }
 }
 
 function applyThemeSource(theme) {
@@ -118,21 +137,20 @@ function pushThemeToRenderer() {
   mainWindow.webContents.send('theme:changed', { isDark: isDarkActive() })
 }
 
+// 他のアプリやOSに先に取られているとregisterはfalseを返す(macOSでは特に起こりやすい)。
+// 黙って失敗すると「オンにしたのに効かない」状態になるため、成否を呼び出し元へ返す。
 function applyHotkey(enabled) {
   globalShortcut.unregisterAll()
-  if (!enabled) return
-  globalShortcut.register(HOTKEY_ACCELERATOR, () => {
-    if (!mainWindow) return
-    if (mainWindow.isVisible()) {
-      mainWindow.hide()
-    } else {
-      showWindow()
-    }
-  })
+  if (!enabled) return true
+  try {
+    return globalShortcut.register(HOTKEY_ACCELERATOR, toggleWindow) !== false
+  } catch {
+    return false
+  }
 }
 
 function applyAutoLaunch(enabled) {
-  // Windows以外(このLinux開発環境含む)でも例外にならないよう保護する。
+  // 対応していない環境(このLinux開発環境含む)でも例外にならないよう保護する。
   try {
     app.setLoginItemSettings({ openAtLogin: enabled })
   } catch {
@@ -142,7 +160,7 @@ function applyAutoLaunch(enabled) {
 
 function applySettingsSideEffects(settings) {
   applyThemeSource(settings.theme)
-  applyHotkey(settings.hotkeyEnabled)
+  hotkeyRegistered = applyHotkey(settings.hotkeyEnabled)
   applyAutoLaunch(settings.autoLaunch)
   if (mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.setAlwaysOnTop(settings.alwaysOnTop)
@@ -170,6 +188,9 @@ app.on('before-quit', () => {
 app.on('window-all-closed', () => {
   // トレイ常駐アプリなので、ウィンドウが閉じてもプロセスは終了しない(macOSのDockアプリ終了慣習も同様に無視)。
 })
+
+// macOSでDockアイコンをクリックしたときは、トレイに格納中のウィンドウを開き直す。
+app.on('activate', showWindow)
 
 // ---- IPC: 業務モード ----
 
@@ -202,16 +223,24 @@ ipcMain.handle('window:minimize', () => mainWindow.minimize())
 
 // ---- IPC: 設定 ----
 
-ipcMain.handle('settings:get', () => ({
-  ...settingsService.readSettings(),
-  isDark: isDarkActive(),
-  accentPresets: settingsService.ACCENT_PRESETS,
-}))
+function settingsPayload(settings) {
+  return {
+    ...settings,
+    isDark: isDarkActive(),
+    accentPresets: settingsService.ACCENT_PRESETS,
+    platform: process.platform,
+    pathExample: configService.PATH_EXAMPLE,
+    hotkeyLabel: IS_MAC ? '⌘ + Shift + Space' : 'Ctrl + Shift + Space',
+    hotkeyRegistered,
+  }
+}
+
+ipcMain.handle('settings:get', () => settingsPayload(settingsService.readSettings()))
 
 ipcMain.handle('settings:update', (event, input) => {
   const next = settingsService.writeSettings(input)
   applySettingsSideEffects(next)
-  return { ...next, isDark: isDarkActive(), accentPresets: settingsService.ACCENT_PRESETS }
+  return settingsPayload(next)
 })
 
 // ---- IPC: データのエクスポート/インポート ----

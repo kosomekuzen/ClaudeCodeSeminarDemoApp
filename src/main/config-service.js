@@ -8,6 +8,12 @@ const DATA_FILE = path.join(DATA_DIR, 'work-modes.json')
 const TARGET_KEYS = ['urls', 'files', 'folders']
 const TARGET_LABELS = { urls: 'URL', files: 'ファイル', folders: 'フォルダ' }
 
+// 入力例はOSごとに書き分ける(Windowsのドライブレター表記をmacOSで見せない)。
+const PATH_EXAMPLE =
+  process.platform === 'darwin'
+    ? { file: '/Users/you/Work/slides.key', folder: '/Users/you/Work/assets' }
+    : { file: 'C:\\Work\\slides.pptx', folder: 'C:\\Work\\assets' }
+
 function labelFor(key) {
   return TARGET_LABELS[key] || key
 }
@@ -72,7 +78,7 @@ function validateEntry(type, entry) {
   }
 
   if (!isAbsolutePath(entry.value)) {
-    return '絶対パスで入力してください(例: C:\\Work\\slides.pptx)'
+    return `絶対パスで入力してください(例: ${PATH_EXAMPLE.file})`
   }
   if (!fs.existsSync(entry.value)) {
     return `パスが見つかりません: ${entry.value}`
@@ -154,6 +160,7 @@ function deleteWorkMode(id) {
 
 module.exports = {
   TARGET_KEYS,
+  PATH_EXAMPLE,
   labelFor,
   isValidHttpUrl,
   listWorkModes,

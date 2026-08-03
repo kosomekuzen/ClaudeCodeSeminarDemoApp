@@ -369,6 +369,10 @@ button {
   margin-top: 2px;
 }
 
+.settings-row-desc.is-error {
+  color: var(--danger);
+}
+
 .select-box {
   font: inherit;
   font-size: 0.78rem;

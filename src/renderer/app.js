@@ -1,3 +1,4 @@
+// valuePlaceholderはOSによって変わるため、設定読み込み時(applyPathExamples)に上書きする。
 const TARGET_TYPES = [
   { key: 'urls', containerId: 'urls-rows', valuePlaceholder: 'https://example.com', labelPlaceholder: '表示名(例: 告知ページ)' },
   { key: 'files', containerId: 'files-rows', valuePlaceholder: 'C:\\Work\\slides.pptx', labelPlaceholder: '表示名(例: 投影資料)' },
@@ -34,6 +35,7 @@ const els = {
   alwaysOnTop: document.getElementById('setting-always-on-top'),
   autoLaunch: document.getElementById('setting-auto-launch'),
   hotkey: document.getElementById('setting-hotkey'),
+  hotkeyDesc: document.getElementById('hotkey-desc'),
   rememberPosition: document.getElementById('setting-remember-position'),
   skipPreview: document.getElementById('setting-skip-preview'),
   notify: document.getElementById('setting-notify'),
@@ -322,6 +324,19 @@ function renderAccentSwatches(presets, selected) {
   })
 }
 
+// 入力欄の例示テキストはOS(Windows/macOS)によって変わるため、メインプロセスの値で上書きする。
+function applyPathExamples(pathExample) {
+  if (!pathExample) return
+  const byKey = { files: pathExample.file, folders: pathExample.folder }
+  TARGET_TYPES.forEach((t) => {
+    if (!byKey[t.key]) return
+    t.valuePlaceholder = byKey[t.key]
+    document
+      .querySelectorAll(`#${t.containerId} input[data-field="value"]`)
+      .forEach((input) => { input.placeholder = byKey[t.key] })
+  })
+}
+
 function populateSettingsForm(settings) {
   els.themeSelect.value = settings.theme
   els.opacityInput.value = settings.opacity
@@ -333,6 +348,15 @@ function populateSettingsForm(settings) {
   els.skipPreview.checked = settings.skipPreviewConfirm
   els.notify.checked = settings.notifyOnComplete
   renderAccentSwatches(settings.accentPresets || [], settings.accentColor)
+
+  if (settings.hotkeyLabel) els.hotkeyDesc.textContent = settings.hotkeyLabel
+  // 他のアプリに先に取られている場合、オンにしても実際には効かないのでその旨を出す。
+  if (settings.hotkeyEnabled && settings.hotkeyRegistered === false) {
+    els.hotkeyDesc.textContent = `${settings.hotkeyLabel} — 他のアプリが使用中のため登録できませんでした`
+    els.hotkeyDesc.classList.add('is-error')
+  } else {
+    els.hotkeyDesc.classList.remove('is-error')
+  }
 }
 
 async function loadSettings() {
@@ -340,6 +364,7 @@ async function loadSettings() {
   currentSettings = settings
   applyThemeToDocument(settings.isDark)
   applyAccentToDocument(settings.accentColor)
+  applyPathExamples(settings.pathExample)
   populateSettingsForm(settings)
 }
 
@@ -348,6 +373,7 @@ async function updateSetting(partial) {
   currentSettings = settings
   applyThemeToDocument(settings.isDark)
   applyAccentToDocument(settings.accentColor)
+  applyPathExamples(settings.pathExample)
   populateSettingsForm(settings)
 }
 
