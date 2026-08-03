@@ -17,6 +17,7 @@ const DEFAULTS = {
   skipPreviewConfirm: false,
   notifyOnComplete: true,
   windowPosition: null, // { x, y } | null
+  windowSize: null, // { width, height } | null
 }
 
 function ensureFile() {
@@ -49,6 +50,15 @@ function sanitize(input) {
     typeof input.windowPosition.y === 'number'
   ) {
     out.windowPosition = { x: input.windowPosition.x, y: input.windowPosition.y }
+  }
+  if (
+    input?.windowSize &&
+    typeof input.windowSize.width === 'number' &&
+    input.windowSize.width > 0 &&
+    typeof input.windowSize.height === 'number' &&
+    input.windowSize.height > 0
+  ) {
+    out.windowSize = { width: input.windowSize.width, height: input.windowSize.height }
   }
 
   return out
