@@ -82,3 +82,4 @@ ipcMain.handle('work-modes:delete', (event, id) => configService.deleteWorkMode(
 ipcMain.handle('work-modes:preview', (event, id) => launcherService.preview(id))
 ipcMain.handle('work-modes:launch', (event, id) => launcherService.launch(id))
 ipcMain.handle('window:hide', () => mainWindow.hide())
+ipcMain.handle('window:minimize', () => mainWindow.minimize())
